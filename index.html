@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球城市生活成本排名 2024</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e27;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1f3a 0%, #0a0e27 100%);
+            padding: 20px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #8b92b0;
+            font-weight: 300;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 100px);
+        }
+
+        .map-section {
+            flex: 1.2;
+            position: relative;
+            background: #0f1420;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #0f1420;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(15, 20, 32, 0.95);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .legend-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #8b92b0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 11px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .chart-section {
+            flex: 1;
+            background: #0a0e27;
+            overflow-y: auto;
+            padding: 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chart-section::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-section::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 4px;
+        }
+
+        .chart-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.7);
+        }
+
+        .bar-container {
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .bar {
+            height: 36px;
+            background: linear-gradient(90deg, var(--bar-color) 0%, var(--bar-color-end) 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .bar:hover::before {
+            transform: translateX(100%);
+        }
+
+        .bar:hover {
+            transform: translateX(8px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .bar.active {
+            transform: translateX(12px) scale(1.03);
+            box-shadow: 0 12px 32px rgba(245, 85, 108, 0.5);
+            border-color: #f5556c;
+        }
+
+        .rank {
+            font-weight: 700;
+            margin-right: 15px;
+            min-width: 40px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .bar-label {
+            font-size: 13px;
+            font-weight: 500;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .country {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 8px;
+        }
+
+        .change {
+            margin-left: auto;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .change.positive {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .change.negative {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .change.neutral {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9ca3af;
+        }
+
+        .leaflet-container {
+            background: #0f1420;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: rgba(15, 20, 32, 0.98);
+            color: #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(15, 20, 32, 0.98);
+        }
+
+        .popup-content {
+            padding: 5px;
+        }
+
+        .popup-rank {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .popup-city {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+
+        .popup-country {
+            font-size: 12px;
+            color: #8b92b0;
+            margin-bottom: 8px;
+        }
+
+        .popup-change {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .search-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .search-input {
+            padding: 12px 20px;
+            background: rgba(15, 20, 32, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            color: #e0e0e0;
+            font-size: 14px;
+            width: 280px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-input::placeholder {
+            color: #8b92b0;
+        }
+
+        /* 暗色地图瓦片 */
+        .leaflet-tile-pane {
+            filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) invert(1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌍 全球城市生活成本排名 2024</h1>
+        <div class="subtitle">Global Cost of Living Index - Top 226 Cities Worldwide</div>
+    </div>
+
+    <div class="container">
+        <div class="map-section">
+            <div id="map"></div>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="🔍 搜索城市..." id="searchInput">
+            </div>
+            <div class="legend">
+                <div class="legend-title">排名等级</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f);"></div>
+                    <span>Top 1-50 (极高成本)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #f093fb, #667eea);"></div>
+                    <span>51-100 (高成本)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                    <span>101-150 (中等成本)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"></div>
+                    <span>151-226 (较低成本)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section" id="chartContainer"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const cities = [
+            {rank: 1, city: "HONG KONG", country: "HONG KONG (SAR)", change: 0, lat: 22.3193, lng: 114.1694},
+            {rank: 2, city: "SINGAPORE", country: "SINGAPORE", change: 0, lat: 1.3521, lng: 103.8198},
+            {rank: 3, city: "ZURICH", country: "SWITZERLAND", change: 0, lat: 47.3769, lng: 8.5417},
+            {rank: 4, city: "GENEVA", country: "SWITZERLAND", change: 0, lat: 46.2044, lng: 6.1432},
+            {rank: 5, city: "BASEL", country: "SWITZERLAND", change: 0, lat: 47.5596, lng: 7.5886},
+            {rank: 6, city: "BERN", country: "SWITZERLAND", change: 1, lat: 46.9480, lng: 7.4474},
+            {rank: 7, city: "NEW YORK CITY, NY", country: "UNITED STATES", change: -1, lat: 40.7128, lng: -74.0060},
+            {rank: 8, city: "LONDON", country: "UNITED KINGDOM", change: 9, lat: 51.5074, lng: -0.1278},
+            {rank: 9, city: "NASSAU", country: "BAHAMAS", change: 1, lat: 25.0443, lng: -77.3504},
+            {rank: 10, city: "LOS ANGELES, CA", country: "UNITED STATES", change: 1, lat: 34.0522, lng: -118.2437},
+            {rank: 11, city: "COPENHAGEN", country: "DENMARK", change: -2, lat: 55.6761, lng: 12.5683},
+            {rank: 12, city: "HONOLULU, HI", country: "UNITED STATES", change: 3, lat: 21.3099, lng: -157.8581},
+            {rank: 13, city: "SAN FRANCISCO, CA", country: "UNITED STATES", change: 1, lat: 37.7749, lng: -122.4194},
+            {rank: 14, city: "BANGUI", country: "CENTRAL AFRICAN REPUBLIC", change: 12, lat: 4.3947, lng: 18.5582},
+            {rank: 15, city: "DUBAI", country: "UNITED ARAB EMIRATES", change: 3, lat: 25.2048, lng: 55.2708},
+            {rank: 16, city: "TEL AVIV", country: "ISRAEL", change: -8, lat: 32.0853, lng: 34.7818},
+            {rank: 17, city: "MIAMI, FL", country: "UNITED STATES", change: 5, lat: 25.7617, lng: -80.1918},
+            {rank: 18, city: "DJIBOUTI", country: "DJIBOUTI", change: 9, lat: 11.8251, lng: 42.5903},
+            {rank: 19, city: "BOSTON, MA", country: "UNITED STATES", change: 2, lat: 42.3601, lng: -71.0589},
+            {rank: 20, city: "CHICAGO, IL", country: "UNITED STATES", change: 4, lat: 41.8781, lng: -87.6298},
+            {rank: 21, city: "N'DJAMENA", country: "CHAD", change: 19, lat: 12.1348, lng: 15.0557},
+            {rank: 22, city: "WASHINGTON, DC", country: "UNITED STATES", change: 1, lat: 38.9072, lng: -77.0369},
+            {rank: 23, city: "SHANGHAI", country: "CHINA", change: -11, lat: 31.2304, lng: 121.4737},
+            {rank: 24, city: "VIENNA", country: "AUSTRIA", change: 1, lat: 48.2082, lng: 16.3738},
+            {rank: 25, city: "BEIJING", country: "CHINA", change: -12, lat: 39.9042, lng: 116.4074},
+            {rank: 26, city: "CONAKRY", country: "GUINEA REPUBLIC", change: 13, lat: 9.6412, lng: -13.5784},
+            {rank: 27, city: "ATLANTA, GA", country: "UNITED STATES", change: 2, lat: 33.7490, lng: -84.3880},
+            {rank: 28, city: "SEATTLE, WA", country: "UNITED STATES", change: 3, lat: 47.6062, lng: -122.3321},
+            {rank: 29, city: "PARIS", country: "FRANCE", change: 6, lat: 48.8566, lng: 2.3522},
+            {rank: 30, city: "AMSTERDAM", country: "NETHERLANDS", change: -2, lat: 52.3676, lng: 4.9041},
+            {rank: 31, city: "BERLIN", country: "GERMANY", change: 6, lat: 52.5200, lng: 13.4050},
+            {rank: 32, city: "SEOUL", country: "SOUTH KOREA", change: -16, lat: 37.5665, lng: 126.9780},
+            {rank: 33, city: "MEXICO CITY", country: "MEXICO", change: 46, lat: 19.4326, lng: -99.1332},
+            {rank: 34, city: "SHENZHEN", country: "CHINA", change: -14, lat: 22.5431, lng: 114.0579},
+            {rank: 35, city: "FRANKFURT", country: "GERMANY", change: 13, lat: 50.1109, lng: 8.6821},
+            {rank: 36, city: "SAN JOSE", country: "COSTA RICA", change: 27, lat: 9.9281, lng: -84.0907},
+            {rank: 37, city: "BRUSSELS", country: "BELGIUM", change: 4, lat: 50.8503, lng: 4.3517},
+            {rank: 38, city: "MUNICH", country: "GERMANY", change: 0, lat: 48.1351, lng: 11.5820},
+            {rank: 39, city: "DAKAR", country: "SENEGAL", change: 27, lat: 14.7167, lng: -17.4677},
+            {rank: 40, city: "HELSINKI", country: "FINLAND", change: -6, lat: 60.1695, lng: 24.9354},
+            {rank: 41, city: "DUBLIN", country: "IRELAND", change: 10, lat: 53.3498, lng: -6.2603},
+            {rank: 42, city: "MONTEVIDEO", country: "URUGUAY", change: 12, lat: -34.9011, lng: -56.1645},
+            {rank: 43, city: "ABU DHABI", country: "UNITED ARAB EMIRATES", change: 0, lat: 24.4539, lng: 54.3773},
+            {rank: 44, city: "THE HAGUE", country: "NETHERLANDS", change: 2, lat: 52.0705, lng: 4.3007},
+            {rank: 45, city: "LIBREVILLE", country: "GABON", change: 7, lat: 0.4162, lng: 9.4673},
+            {rank: 46, city: "PHILADELPHIA, PA", country: "UNITED STATES", change: 4, lat: 39.9526, lng: -75.1652},
+            {rank: 47, city: "LUXEMBOURG", country: "LUXEMBOURG", change: 11, lat: 49.6116, lng: 6.1319},
+            {rank: 48, city: "SAN JUAN", country: "PUERTO RICO", change: -4, lat: 18.4655, lng: -66.1057},
+            {rank: 49, city: "TOKYO", country: "JAPAN", change: -30, lat: 35.6762, lng: 139.6503},
+            {rank: 50, city: "HOUSTON, TX", country: "UNITED STATES", change: 11, lat: 29.7604, lng: -95.3698},
+            {rank: 51, city: "DUSSELDORF", country: "GERMANY", change: 23, lat: 51.2277, lng: 6.7735},
+            {rank: 52, city: "OSLO", country: "NORWAY", change: 8, lat: 59.9139, lng: 10.7522},
+            {rank: 53, city: "EDINBURGH", country: "UNITED KINGDOM", change: 33, lat: 55.9533, lng: -3.1883},
+            {rank: 54, city: "HAMBURG", country: "GERMANY", change: 8, lat: 53.5511, lng: 9.9937},
+            {rank: 55, city: "DALLAS, TX", country: "UNITED STATES", change: -2, lat: 32.7767, lng: -96.7970},
+            {rank: 56, city: "PRAGUE", country: "CZECH REPUBLIC", change: -23, lat: 50.0755, lng: 14.4378},
+            {rank: 57, city: "MILAN", country: "ITALY", change: -8, lat: 45.4642, lng: 9.1900},
+            {rank: 58, city: "SYDNEY", country: "AUSTRALIA", change: -2, lat: -33.8688, lng: 151.2093},
+            {rank: 59, city: "MINNEAPOLIS, MN", country: "UNITED STATES", change: 8, lat: 44.9778, lng: -93.2650},
+            {rank: 60, city: "NOUMEA", country: "NEW CALEDONIA", change: 10, lat: -22.2758, lng: 166.4580},
+            {rank: 61, city: "RIGA", country: "LATVIA", change: 3, lat: 56.9496, lng: 24.1052},
+            {rank: 62, city: "PITTSBURGH, PA", country: "UNITED STATES", change: 3, lat: 40.4406, lng: -79.9959},
+            {rank: 63, city: "DOUALA", country: "CAMEROON", change: 18, lat: 4.0511, lng: 9.7679},
+            {rank: 64, city: "VICTORIA", country: "SEYCHELLES", change: -22, lat: -4.6191, lng: 55.4513},
+            {rank: 65, city: "PORTLAND, OR", country: "UNITED STATES", change: 7, lat: 45.5152, lng: -122.6784},
+            {rank: 66, city: "BARCELONA", country: "SPAIN", change: 9, lat: 41.3874, lng: 2.1686},
+            {rank: 67, city: "ROME", country: "ITALY", change: -8, lat: 41.9028, lng: 12.4964},
+            {rank: 68, city: "GLASGOW", country: "UNITED KINGDOM", change: 41, lat: 55.8642, lng: -4.2518},
+            {rank: 69, city: "TAIPEI", country: "TAIWAN", change: -12, lat: 25.0330, lng: 121.5654},
+            {rank: 70, city: "STUTTGART", country: "GERMANY", change: -1, lat: 48.7758, lng: 9.1829},
+            {rank: 71, city: "GUANGZHOU", country: "CHINA", change: -35, lat: 23.1291, lng: 113.2644},
+            {rank: 72, city: "ST. LOUIS, MO", country: "UNITED STATES", change: 6, lat: 38.6270, lng: -90.1994},
+            {rank: 73, city: "MELBOURNE", country: "AUSTRALIA", change: -2, lat: -37.8136, lng: 144.9631},
+            {rank: 74, city: "BRAZZAVILLE", country: "THE REPUBLIC OF CONGO", change: 10, lat: -4.2634, lng: 15.2429},
+            {rank: 75, city: "LYON", country: "FRANCE", change: 17, lat: 45.7640, lng: 4.8357},
+            {rank: 76, city: "MADRID", country: "SPAIN", change: 7, lat: 40.4168, lng: -3.7038},
+            {rank: 77, city: "BUENOS AIRES", country: "ARGENTINA", change: -32, lat: -34.6037, lng: -58.3816},
+            {rank: 78, city: "BIRMINGHAM", country: "UNITED KINGDOM", change: 40, lat: 52.4862, lng: -1.8904},
+            {rank: 79, city: "KINSHASA", country: "THE DEMOCRATIC REPUBLIC OF THE CONGO", change: -47, lat: -4.4419, lng: 15.2663},
+            {rank: 80, city: "ABIDJAN", country: "CÔTE D'IVOIRE", change: -3, lat: 5.3600, lng: -4.0083},
+            {rank: 81, city: "DETROIT, MI", country: "UNITED STATES", change: -1, lat: 42.3314, lng: -83.0458},
+            {rank: 82, city: "ABERDEEN", country: "UNITED KINGDOM", change: 37, lat: 57.1497, lng: -2.0943},
+            {rank: 83, city: "BRATISLAVA", country: "SLOVAKIA", change: 21, lat: 48.1486, lng: 17.1077},
+            {rank: 84, city: "CLEVELAND, OH", country: "UNITED STATES", change: 4, lat: 41.4993, lng: -81.6944},
+            {rank: 85, city: "NUREMBERG", country: "GERMANY", change: 11, lat: 49.4521, lng: 11.0767},
+            {rank: 86, city: "LEIPZIG", country: "GERMANY", change: 5, lat: 51.3397, lng: 12.3731},
+            {rank: 87, city: "BELFAST", country: "UNITED KINGDOM", change: 38, lat: 54.5973, lng: -5.9301},
+            {rank: 88, city: "BUSAN", country: "SOUTH KOREA", change: -20, lat: 35.1796, lng: 129.0756},
+            {rank: 89, city: "BRISBANE", country: "AUSTRALIA", change: -7, lat: -27.4698, lng: 153.0251},
+            {rank: 90, city: "RIYADH", country: "SAUDI ARABIA", change: -5, lat: 24.7136, lng: 46.6753},
+            {rank: 91, city: "YAOUNDE", country: "CAMEROON", change: 11, lat: 3.8480, lng: 11.5021},
+            {rank: 92, city: "TORONTO", country: "CANADA", change: -2, lat: 43.6532, lng: -79.3832},
+            {rank: 93, city: "QINGDAO", country: "CHINA", change: -38, lat: 36.0671, lng: 120.3826},
+            {rank: 94, city: "POINTE-A-PITRE", country: "GUADELOUPE (FRANCE)", change: 9, lat: 16.2410, lng: -61.5330},
+            {rank: 95, city: "TOULOUSE", country: "FRANCE", change: 26, lat: 43.6047, lng: 1.4442},
+            {rank: 96, city: "TALLINN", country: "ESTONIA", change: 4, lat: 59.4370, lng: 24.7536},
+            {rank: 97, city: "JEDDAH", country: "SAUDI ARABIA", change: 4, lat: 21.5433, lng: 39.1728},
+            {rank: 98, city: "ACCRA", country: "GHANA", change: 80, lat: 5.6037, lng: -0.1870},
+            {rank: 99, city: "KINGSTON", country: "JAMAICA", change: 28, lat: 17.9714, lng: -76.7931},
+            {rank: 100, city: "LISBON", country: "PORTUGAL", change: 17, lat: 38.7223, lng: -9.1393},
+            {rank: 101, city: "VANCOUVER", country: "CANADA", change: 15, lat: 49.2827, lng: -123.1207},
+            {rank: 102, city: "STOCKHOLM", country: "SWEDEN", change: -7, lat: 59.3293, lng: 18.0686},
+            {rank: 103, city: "TIRANA", country: "ALBANIA", change: 50, lat: 41.3275, lng: 19.8187},
+            {rank: 104, city: "ATHENS", country: "GREECE", change: -7, lat: 37.9838, lng: 23.7275},
+            {rank: 105, city: "NANJING", country: "CHINA", change: -32, lat: 32.0603, lng: 118.7969},
+            {rank: 106, city: "CANBERRA", country: "AUSTRALIA", change: -12, lat: -35.2809, lng: 149.1300},
+            {rank: 107, city: "ADELAIDE", country: "AUSTRALIA", change: -1, lat: -34.9285, lng: 138.6007},
+            {rank: 108, city: "AMMAN", country: "JORDAN", change: 2, lat: 31.9454, lng: 35.9284},
+            {rank: 109, city: "PERTH", country: "AUSTRALIA", change: -2, lat: -31.9505, lng: 115.8605},
+            {rank: 110, city: "MANAMA", country: "BAHRAIN", change: -12, lat: 26.2285, lng: 50.5860},
+            {rank: 111, city: "AUCKLAND", country: "NEW ZEALAND", change: 0, lat: -36.8485, lng: 174.7633},
+            {rank: 112, city: "SHENYANG", country: "CHINA", change: -36, lat: 41.8057, lng: 123.4328},
+            {rank: 113, city: "VILNIUS", country: "LITHUANIA", change: 10, lat: 54.6872, lng: 25.2797},
+            {rank: 114, city: "PORT OF SPAIN", country: "TRINIDAD & TOBAGO", change: 6, lat: 10.6918, lng: -61.2225},
+            {rank: 115, city: "MONTERREY", country: "MEXICO", change: 40, lat: 25.6866, lng: -100.3161},
+            {rank: 116, city: "HARARE", country: "ZIMBABWE", change: -2, lat: -17.8252, lng: 31.0335},
+            {rank: 117, city: "LJUBLJANA", country: "SLOVENIA", change: 26, lat: 46.0569, lng: 14.5058},
+            {rank: 118, city: "MONTREAL", country: "CANADA", change: 17, lat: 45.5017, lng: -73.5673},
+            {rank: 119, city: "KUWAIT CITY", country: "KUWAIT", change: 12, lat: 29.3759, lng: 47.9774},
+            {rank: 120, city: "BAMAKO", country: "MALI", change: 8, lat: 12.6392, lng: -8.0029},
+            {rank: 121, city: "DOHA", country: "QATAR", change: 5, lat: 25.2854, lng: 51.5310},
+            {rank: 122, city: "MUSCAT", country: "OMAN", change: 8, lat: 23.5880, lng: 58.3829},
+            {rank: 123, city: "PHNOM PENH", country: "CAMBODIA", change: 9, lat: 11.5564, lng: 104.9282},
+            {rank: 124, city: "SAO PAULO", country: "BRAZIL", change: 28, lat: -23.5505, lng: -46.6333},
+            {rank: 125, city: "CHENGDU", country: "CHINA", change: -36, lat: 30.5728, lng: 104.0668},
+            {rank: 126, city: "OTTAWA", country: "CANADA", change: 11, lat: 45.4215, lng: -75.6972},
+            {rank: 127, city: "GUATEMALA CITY", country: "GUATEMALA", change: 9, lat: 14.6349, lng: -90.5069},
+            {rank: 128, city: "LOME", country: "TOGO", change: 6, lat: 6.1256, lng: 1.2315},
+            {rank: 129, city: "BANGKOK", country: "THAILAND", change: -24, lat: 13.7563, lng: 100.5018},
+            {rank: 130, city: "ISTANBUL", country: "TURKIYE", change: 55, lat: 41.0082, lng: 28.9784},
+            {rank: 131, city: "MANILA", country: "PHILIPPINES", change: 2, lat: 14.5995, lng: 120.9842},
+            {rank: 132, city: "TAICHUNG", country: "TAIWAN", change: -8, lat: 24.1477, lng: 120.6736},
+            {rank: 133, city: "SUZHOU", country: "CHINA", change: -21, lat: 31.2989, lng: 120.5853},
+            {rank: 134, city: "CHONGQING", country: "CHINA", change: -35, lat: 29.4316, lng: 106.9123},
+            {rank: 135, city: "WARSAW", country: "POLAND", change: 35, lat: 52.2297, lng: 21.0122},
+            {rank: 136, city: "MUMBAI", country: "INDIA", change: 11, lat: 19.0760, lng: 72.8777},
+            {rank: 137, city: "ZAGREB", country: "CROATIA", change: 9, lat: 45.8150, lng: 15.9819},
+            {rank: 138, city: "ADDIS ABABA", country: "ETHIOPIA", change: 56, lat: 9.0320, lng: 38.7469},
+            {rank: 139, city: "XIAN", country: "CHINA", change: -31, lat: 34.3416, lng: 108.9398},
+            {rank: 140, city: "DHAKA", country: "BANGLADESH", change: 14, lat: 23.8103, lng: 90.4125},
+            {rank: 141, city: "CALGARY", country: "CANADA", change: 4, lat: 51.0447, lng: -114.0719},
+            {rank: 142, city: "COTONOU", country: "BENIN", change: 2, lat: 6.3654, lng: 2.4183},
+            {rank: 143, city: "BUDAPEST", country: "HUNGARY", change: 18, lat: 47.4979, lng: 19.0402},
+            {rank: 144, city: "OUAGADOUGOU", country: "BURKINA FASO", change: 5, lat: 12.3714, lng: -1.5197},
+            {rank: 145, city: "WELLINGTON", country: "NEW ZEALAND", change: -6, lat: -41.2865, lng: 174.7762},
+            {rank: 146, city: "OSAKA", country: "JAPAN", change: -53, lat: 34.6937, lng: 135.5023},
+            {rank: 147, city: "WUHAN", country: "CHINA", change: -25, lat: 30.5928, lng: 114.3055},
+            {rank: 148, city: "QUITO", country: "ECUADOR", change: 2, lat: -0.1807, lng: -78.4678},
+            {rank: 149, city: "KAOHSIUNG", country: "TAIWAN", change: -11, lat: 22.6273, lng: 120.3014},
+            {rank: 150, city: "RIO DE JANEIRO", country: "BRAZIL", change: 21, lat: -22.9068, lng: -43.1729},
+            {rank: 151, city: "PANAMA CITY", country: "PANAMA", change: -3, lat: 8.9824, lng: -79.5199},
+            {rank: 152, city: "NIAMEY", country: "NIGER", change: 5, lat: 13.5116, lng: 2.1254},
+            {rank: 153, city: "CASABLANCA", country: "MOROCCO", change: 5, lat: 33.5731, lng: -7.5898},
+            {rank: 154, city: "YOKOHAMA", country: "JAPAN", change: -39, lat: 35.4437, lng: 139.6380},
+            {rank: 155, city: "BUCHAREST", country: "ROMANIA", change: -13, lat: 44.4268, lng: 26.1025},
+            {rank: 156, city: "YEREVAN", country: "ARMENIA", change: -15, lat: 40.1792, lng: 44.4991},
+            {rank: 157, city: "JAKARTA", country: "INDONESIA", change: -6, lat: -6.2088, lng: 106.8456},
+            {rank: 158, city: "LUANDA", country: "ANGOLA", change: -128, lat: -8.8368, lng: 13.2343},
+            {rank: 159, city: "BELGRADE", country: "SERBIA", change: 16, lat: 44.7866, lng: 20.4489},
+            {rank: 160, city: "SANTIAGO", country: "CHILE", change: -73, lat: -33.4489, lng: -70.6693},
+            {rank: 161, city: "NAGOYA", country: "JAPAN", change: -48, lat: 35.1815, lng: 136.9066},
+            {rank: 162, city: "SOFIA", country: "BULGARIA", change: 6, lat: 42.6977, lng: 23.3219},
+            {rank: 163, city: "LIMASSOL", country: "CYPRUS", change: 2, lat: 34.7076, lng: 33.0226},
+            {rank: 164, city: "MAPUTO", country: "MOZAMBIQUE", change: -5, lat: -25.9655, lng: 32.5832},
+            {rank: 165, city: "NEW DELHI", country: "INDIA", change: 4, lat: 28.6139, lng: 77.2090},
+            {rank: 166, city: "LIMA", country: "PERU", change: 1, lat: -12.0464, lng: -77.0428},
+            {rank: 167, city: "SANTO DOMINGO", country: "DOMINICAN REPUBLIC", change: -7, lat: 18.4861, lng: -69.9312},
+            {rank: 168, city: "CAIRO", country: "EGYPT", change: 49, lat: 30.0444, lng: 31.2357},
+            {rank: 169, city: "WROCLAW", country: "POLAND", change: 17, lat: 51.1079, lng: 17.0385},
+            {rank: 170, city: "BUJUMBURA", country: "BURUNDI", change: -41, lat: -3.3614, lng: 29.3599},
+            {rank: 171, city: "BAKU", country: "AZERBAIJAN", change: 6, lat: 40.4093, lng: 49.8671},
+            {rank: 172, city: "HANOI", country: "VIETNAM", change: -16, lat: 21.0285, lng: 105.8542},
+            {rank: 173, city: "RABAT", country: "MOROCCO", change: 1, lat: 34.0209, lng: -6.8416},
+            {rank: 174, city: "BOGOTA", country: "COLOMBIA", change: 40, lat: 4.7110, lng: -74.0721},
+            {rank: 175, city: "KRAKOW", country: "POLAND", change: 15, lat: 50.0647, lng: 19.9450},
+            {rank: 176, city: "BANDAR SERI BEGAWAN", country: "BRUNEI", change: -4, lat: 4.9031, lng: 114.9398},
+            {rank: 177, city: "KAMPALA", country: "UGANDA", change: -11, lat: 0.3476, lng: 32.5825},
+            {rank: 178, city: "HO CHI MINH CITY", country: "VIETNAM", change: -14, lat: 10.8231, lng: 106.6297},
+            {rank: 179, city: "BRASILIA", country: "BRAZIL", change: 9, lat: -15.8267, lng: -47.9218},
+            {rank: 180, city: "SAN SALVADOR", country: "EL SALVADOR", change: -4, lat: 13.6929, lng: -89.2182},
+            {rank: 181, city: "DAR ES SALAAM", country: "TANZANIA", change: -19, lat: -6.7924, lng: 39.2083},
+            {rank: 182, city: "MANAUS", country: "BRAZIL", change: 14, lat: -3.1190, lng: -60.0217},
+            {rank: 183, city: "YANGON", country: "MYANMAR", change: 21, lat: 16.8661, lng: 96.1951},
+            {rank: 184, city: "TEGUCIGALPA", country: "HONDURAS", change: -5, lat: 14.0723, lng: -87.1921},
+            {rank: 185, city: "BELO HORIZONTE", country: "BRAZIL", change: 14, lat: -19.9167, lng: -43.9345},
+            {rank: 186, city: "NOUAKCHOTT", country: "MAURITANIA", change: -23, lat: 18.0735, lng: -15.9582},
+            {rank: 187, city: "PORT LOUIS", country: "MAURITIUS", change: 0, lat: -20.1609, lng: 57.5012},
+            {rank: 188, city: "TBILISI", country: "GEORGIA", change: -7, lat: 41.7151, lng: 44.8271},
+            {rank: 189, city: "CHENNAI", country: "INDIA", change: -5, lat: 13.0827, lng: 80.2707},
+            {rank: 190, city: "COLOMBO", country: "SRI LANKA", change: 25, lat: 6.9271, lng: 79.8612},
+            {rank: 191, city: "ALMATY", country: "KAZAKHSTAN", change: 17, lat: 43.2220, lng: 76.8512},
+            {rank: 192, city: "ASUNCION", country: "PARAGUAY", change: 0, lat: -25.2637, lng: -57.5759},
+            {rank: 193, city: "ANTANANARIVO", country: "MADAGASCAR", change: 0, lat: -18.8792, lng: 47.5079},
+            {rank: 194, city: "ALGIERS", country: "ALGERIA", change: 12, lat: 36.7538, lng: 3.0588},
+            {rank: 195, city: "BENGALURU", country: "INDIA", change: -6, lat: 12.9716, lng: 77.5946},
+            {rank: 196, city: "LA PAZ", country: "BOLIVIA", change: -1, lat: -16.5000, lng: -68.1500},
+            {rank: 197, city: "MANAGUA", country: "NICARAGUA", change: 4, lat: 12.1150, lng: -86.2362},
+            {rank: 198, city: "SKOPJE", country: "MACEDONIA", change: 2, lat: 41.9973, lng: 21.4280},
+            {rank: 199, city: "KIGALI", country: "RWANDA", change: -8, lat: -1.9706, lng: 30.1044},
+            {rank: 200, city: "KUALA LUMPUR", country: "MALAYSIA", change: -20, lat: 3.1390, lng: 101.6869},
+            {rank: 201, city: "NAIROBI", country: "KENYA", change: -28, lat: -1.2864, lng: 36.8172},
+            {rank: 202, city: "HYDERABAD", country: "INDIA", change: 0, lat: 17.3850, lng: 78.4867},
+            {rank: 203, city: "SARAJEVO", country: "BOSNIA-HERZEGOVINA", change: 0, lat: 43.8564, lng: 18.4131},
+            {rank: 204, city: "BANJUL", country: "GAMBIA", change: 3, lat: 13.4549, lng: -16.5790},
+            {rank: 205, city: "PUNE", country: "INDIA", change: 8, lat: 18.5204, lng: 73.8567},
+            {rank: 206, city: "JOHANNESBURG", country: "SOUTH AFRICA", change: -1, lat: -26.2041, lng: 28.0473},
+            {rank: 207, city: "KOLKATA", country: "INDIA", change: 4, lat: 22.5726, lng: 88.3639},
+            {rank: 208, city: "ANKARA", country: "TURKIYE", change: 13, lat: 39.9334, lng: 32.8597},
+            {rank: 209, city: "CAPE TOWN", country: "SOUTH AFRICA", change: 1, lat: -33.9249, lng: 18.4241},
+            {rank: 210, city: "TUNIS", country: "TUNISIA", change: 9, lat: 36.8065, lng: 10.1815},
+            {rank: 211, city: "VIENTIANE", country: "LAO PEOPLE'S DEMOCRATIC REPUBLIC", change: -2, lat: 17.9757, lng: 102.6331},
+            {rank: 212, city: "MINSK", country: "BELARUS", change: -30, lat: 53.9045, lng: 27.5615},
+            {rank: 213, city: "LUSAKA", country: "ZAMBIA", change: -16, lat: -15.3875, lng: 28.3228},
+            {rank: 214, city: "JOHOR BAHRU", country: "MALAYSIA", change: -2, lat: 1.4927, lng: 103.7414},
+            {rank: 215, city: "GABORONE", country: "BOTSWANA", change: 1, lat: -24.6282, lng: 25.9231},
+            {rank: 216, city: "TASHKENT", country: "UZBEKISTAN", change: 2, lat: 41.2995, lng: 69.2401},
+            {rank: 217, city: "HAVANA", country: "CUBA", change: 8, lat: 23.1136, lng: -82.3666},
+            {rank: 218, city: "WINDHOEK", country: "NAMIBIA", change: 4, lat: -22.5597, lng: 17.0832},
+            {rank: 219, city: "DURBAN", country: "SOUTH AFRICA", change: 1, lat: -29.8587, lng: 31.0218},
+            {rank: 220, city: "DUSHANBE", country: "TAJIKISTAN", change: 3, lat: 38.5598, lng: 68.7738},
+            {rank: 221, city: "BLANTYRE", country: "MALAWI", change: -23, lat: -15.7861, lng: 35.0058},
+            {rank: 222, city: "KARACHI", country: "PAKISTAN", change: 4, lat: 24.8607, lng: 67.0011},
+            {rank: 223, city: "BISHKEK", country: "KYRGYZSTAN", change: 1, lat: 42.8746, lng: 74.5698},
+            {rank: 224, city: "ISLAMABAD", country: "PAKISTAN", change: 3, lat: 33.6844, lng: 73.0479},
+            {rank: 225, city: "LAGOS", country: "NIGERIA", change: -178, lat: 6.5244, lng: 3.3792},
+            {rank: 226, city: "ABUJA", country: "NIGERIA", change: -86, lat: 9.0765, lng: 7.3986}
+        ];
+
+        // 根据排名获取颜色
+        function getColor(rank) {
+            if (rank <= 50) {
+                return {
+                    start: '#ff6b6b',
+                    end: '#ee5a6f',
+                    marker: '#ff6b6b'
+                };
+            } else if (rank <= 100) {
+                return {
+                    start: '#f093fb',
+                    end: '#667eea',
+                    marker: '#667eea'
+                };
+            } else if (rank <= 150) {
+                return {
+                    start: '#4facfe',
+                    end: '#00f2fe',
+                    marker: '#00f2fe'
+                };
+            } else {
+                return {
+                    start: '#43e97b',
+                    end: '#38f9d7',
+                    marker: '#43e97b'
+                };
+            }
+        }
+
+        // 根据排名获取标记大小
+        function getMarkerSize(rank) {
+            if (rank <= 20) return 10;
+            if (rank <= 50) return 8;
+            if (rank <= 100) return 6;
+            if (rank <= 150) return 5;
+            return 4;
+        }
+
+        // 初始化地图
+        const map = L.map('map', {
+            zoomControl: true,
+            minZoom: 2,
+            maxZoom: 18
+        }).setView([20, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const markers = {};
+        let currentMarker = null;
+        let currentBar = null;
+
+        // 创建标记
+        cities.forEach(city => {
+            const colors = getColor(city.rank);
+            const size = getMarkerSize(city.rank);
+
+            const marker = L.circleMarker([city.lat, city.lng], {
+                radius: size,
+                fillColor: colors.marker,
+                color: '#fff',
+                weight: 1.5,
+                opacity: 0.9,
+                fillOpacity: 0.7
+            }).addTo(map);
+
+            const changeClass = city.change > 0 ? 'positive' : city.change < 0 ? 'negative' : 'neutral';
+            const popupContent = `
+                <div class="popup-content">
+                    <div class="popup-rank">#${city.rank}</div>
+                    <div class="popup-city">${city.city}</div>
+                    <div class="popup-country">${city.country}</div>
+                    <div class="popup-change ${changeClass}">
+                        排名变化: ${city.change > 0 ? '+' : ''}${city.change}
+                    </div>
+                </div>
+            `;
+            marker.bindPopup(popupContent);
+            markers[city.rank] = marker;
+        });
+
+        // 创建条形图
+        const chartContainer = document.getElementById('chartContainer');
+        cities.forEach(city => {
+            const colors = getColor(city.rank);
+            const barContainer = document.createElement('div');
+            barContainer.className = 'bar-container';
+
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.setProperty('--bar-color', colors.start);
+            bar.style.setProperty('--bar-color-end', colors.end);
+            bar.style.width = `${Math.max(30, 100 - (city.rank - 1) * 0.3)}%`;
+
+            const changeClass = city.change > 0 ? 'positive' : city.change < 0 ? 'negative' : 'neutral';
+            const changeSymbol = city.change > 0 ? '↑' : city.change < 0 ? '↓' : '—';
+
+            bar.innerHTML = `
+                <span class="rank">#${city.rank}</span>
+                <span class="bar-label">
+                    ${city.city}
+                    <span class="country">${city.country}</span>
+                </span>
+                <span class="change ${changeClass}">${changeSymbol} ${Math.abs(city.change)}</span>
+            `;
+
+            bar.addEventListener('mouseenter', () => {
+                if (currentBar) {
+                    currentBar.classList.remove('active');
+                }
+                bar.classList.add('active');
+                currentBar = bar;
+
+                const marker = markers[city.rank];
+
+                if (currentMarker) {
+                    const prevCity = cities.find(c => c.rank === parseInt(currentMarker.options.rank));
+                    const prevColors = getColor(prevCity.rank);
+                    const prevSize = getMarkerSize(prevCity.rank);
+                    currentMarker.setStyle({
+                        fillColor: prevColors.marker,
+                        radius: prevSize,
+                        weight: 1.5
+                    });
+                }
+
+                marker.setStyle({
+                    fillColor: '#f5556c',
+                    radius: 16,
+                    weight: 3
+                });
+                marker.options.rank = city.rank;
+
+                currentMarker = marker;
+
+                // 平滑缩放到城市
+                map.flyTo([city.lat, city.lng], Math.max(map.getZoom(), 6), {
+                    duration: 0.8,
+                    easeLinearity: 0.25
+                });
+                
+                setTimeout(() => {
+                    marker.openPopup();
+                }, 500);
+            });
+
+            barContainer.appendChild(bar);
+            chartContainer.appendChild(barContainer);
+        });
+
+        // 搜索功能
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const bars = chartContainer.querySelectorAll('.bar-container');
+
+            bars.forEach((barContainer, index) => {
+                const city = cities[index];
+                const cityName = city.city.toLowerCase();
+                const countryName = city.country.toLowerCase();
+
+                if (cityName.includes(searchTerm) || countryName.includes(searchTerm)) {
+                    barContainer.style.display = 'block';
+                } else {
+                    barContainer.style.display = 'none';
+                }
+            });
+        });
+
+        // 重置地图视图
+        map.on('click', () => {
+            if (currentBar) {
+                currentBar.classList.remove('active');
+            }
+            if (currentMarker) {
+                const city = cities.find(c => c.rank === parseInt(currentMarker.options.rank));
+                const colors = getColor(city.rank);
+                const size = getMarkerSize(city.rank);
+                currentMarker.setStyle({
+                    fillColor: colors.marker,
+                    radius: size,
+                    weight: 1.5
+                });
+            }
+        });
+    </script>
+</body>
+</html>
