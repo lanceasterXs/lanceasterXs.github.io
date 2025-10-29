@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>全球城市生活成本排名 2024</title>
+    <title>全球城市排名 2024 - 生活成本 & 生活质量</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -43,9 +43,180 @@
             font-weight: 300;
         }
 
+        .controls-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            gap: 20px;
+        }
+
+        .toggle-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: #8b92b0;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            color: #8b92b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-value {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .range-slider-container {
+            position: relative;
+            width: 200px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .range-slider-track {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+        }
+
+        .range-inputs {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .range-input {
+            width: 60px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .range-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: transparent;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #667eea;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #667eea;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .reset-btn {
+            padding: 8px 16px;
+            background: rgba(248, 113, 113, 0.2);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            border-radius: 16px;
+            color: #f87171;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(248, 113, 113, 0.3);
+            border-color: #f87171;
+        }
+
+        .filter-stats {
+            font-size: 11px;
+            color: #8b92b0;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-stats strong {
+            color: #4ade80;
+            font-weight: 700;
+        }
+
         .container {
             display: flex;
-            height: calc(100vh - 100px);
+            height: calc(100vh - 180px);
         }
 
         .map-section {
@@ -267,6 +438,31 @@
             display: inline-block;
         }
 
+        .popup-dual-rank {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .popup-dual-rank > div {
+            flex: 1;
+        }
+
+        .popup-rank-label {
+            font-size: 10px;
+            color: #8b92b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .popup-rank-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
         .search-container {
             position: absolute;
             top: 20px;
@@ -296,16 +492,63 @@
             color: #8b92b0;
         }
 
-        /* 暗色地图瓦片 */
         .leaflet-tile-pane {
             filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) invert(1);
+        }
+
+        .dual-rank-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 8px;
+            color: #667eea;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🌍 全球城市生活成本排名 2024</h1>
-        <div class="subtitle">Global Cost of Living Index - Top 226 Cities Worldwide</div>
+        <h1>🌍 全球城市排名 2024</h1>
+        <div class="subtitle">Global City Rankings - Cost of Living & Quality of Life</div>
+        <div class="controls-container">
+            <div class="toggle-container">
+                <button class="toggle-btn active" onclick="switchRanking('cost')">💰 生活成本排名</button>
+                <button class="toggle-btn" onclick="switchRanking('quality')">⭐ 生活质量排名</button>
+            </div>
+            
+            <div class="filter-container">
+                <div class="filter-group">
+                    <div class="filter-label">
+                        <span>💰 生活成本</span>
+                        <span class="filter-value" id="costRangeValue">1 - 226</span>
+                    </div>
+                    <div class="range-slider-container">
+                        <div class="range-slider-track" id="costTrack"></div>
+                        <input type="range" id="costMinRange" min="1" max="226" value="1" step="1">
+                        <input type="range" id="costMaxRange" min="1" max="226" value="226" step="1">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-label">
+                        <span>⭐ 生活质量</span>
+                        <span class="filter-value" id="qualityRangeValue">1 - 200</span>
+                    </div>
+                    <div class="range-slider-container">
+                        <div class="range-slider-track" id="qualityTrack"></div>
+                        <input type="range" id="qualityMinRange" min="1" max="200" value="1" step="1">
+                        <input type="range" id="qualityMaxRange" min="1" max="200" value="200" step="1">
+                    </div>
+                </div>
+
+                <button class="reset-btn" onclick="resetFilters()">重置筛选</button>
+                
+                <div class="filter-stats">
+                    显示 <strong id="filteredCount">226</strong> / <span id="totalCount">226</span> 个城市
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="container">
@@ -315,22 +558,22 @@
                 <input type="text" class="search-input" placeholder="🔍 搜索城市..." id="searchInput">
             </div>
             <div class="legend">
-                <div class="legend-title">排名等级</div>
+                <div class="legend-title" id="legendTitle">生活成本排名等级</div>
                 <div class="legend-item">
                     <div class="legend-color" style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f);"></div>
-                    <span>Top 1-50 (极高成本)</span>
+                    <span>Top 1-50 (最高)</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background: linear-gradient(135deg, #f093fb, #667eea);"></div>
-                    <span>51-100 (高成本)</span>
+                    <span>51-100 (高)</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
-                    <span>101-150 (中等成本)</span>
+                    <span>101-150 (中等)</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"></div>
-                    <span>151-226 (较低成本)</span>
+                    <span>151-226 (较低)</span>
                 </div>
             </div>
         </div>
@@ -340,7 +583,8 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const cities = [
+        // 生活成本数据
+        const costOfLivingData = [
             {rank: 1, city: "HONG KONG", country: "HONG KONG (SAR)", change: 0, lat: 22.3193, lng: 114.1694},
             {rank: 2, city: "SINGAPORE", country: "SINGAPORE", change: 0, lat: 1.3521, lng: 103.8198},
             {rank: 3, city: "ZURICH", country: "SWITZERLAND", change: 0, lat: 47.3769, lng: 8.5417},
@@ -569,6 +813,225 @@
             {rank: 226, city: "ABUJA", country: "NIGERIA", change: -86, lat: 9.0765, lng: 7.3986}
         ];
 
+        // 生活质量数据（仅包含生活成本中已有的城市）
+        const qualityOfLifeRanks = {
+            "ZURICH": {rank: 1, change: 1},
+            "VIENNA": {rank: 2, change: -1},
+            "GENEVA": {rank: 3, change: 2},
+            "COPENHAGEN": {rank: 4, change: 0},
+            "AUCKLAND": {rank: 5, change: -2},
+            "AMSTERDAM": {rank: 6, change: 8},
+            "FRANKFURT": {rank: 7, change: -1},
+            "VANCOUVER": {rank: 7, change: 1},
+            "BERN": {rank: 9, change: 4},
+            "BASEL": {rank: 10, change: 4},
+            "MUNICH": {rank: 11, change: -4},
+            "SYDNEY": {rank: 12, change: -3},
+            "TORONTO": {rank: 13, change: 4},
+            "THE HAGUE": {rank: 14, change: -3},
+            "WELLINGTON": {rank: 14, change: -2},
+            "DUSSELDORF": {rank: 16, change: -6},
+            "LUXEMBOURG": {rank: 17, change: -1},
+            "STOCKHOLM": {rank: 18, change: 8},
+            "BERLIN": {rank: 19, change: -1},
+            "OTTAWA": {rank: 20, change: -2},
+            "MONTREAL": {rank: 20, change: 0},
+            "MELBOURNE": {rank: 20, change: 0},
+            "PERTH": {rank: 20, change: 2},
+            "OSLO": {rank: 20, change: 4},
+            "CALGARY": {rank: 25, change: -2},
+            "HELSINKI": {rank: 26, change: 8},
+            "LISBON": {rank: 27, change: 12},
+            "HAMBURG": {rank: 28, change: -3},
+            "CANBERRA": {rank: 29, change: -1},
+            "ADELAIDE": {rank: 30, change: -1},
+            "SINGAPORE": {rank: 30, change: -1},
+            "TOULOUSE": {rank: 32, change: 1},
+            "BOSTON, MA": {rank: 32, change: 9},
+            "PARIS": {rank: 34, change: -2},
+            "NUREMBERG": {rank: 35, change: -4},
+            "BRISBANE": {rank: 36, change: -2},
+            "SAN FRANCISCO, CA": {rank: 36, change: 1},
+            "LYON": {rank: 36, change: 2},
+            "HONOLULU, HI": {rank: 39, change: 3},
+            "BRUSSELS": {rank: 40, change: -4},
+            "LONDON": {rank: 40, change: 5},
+            "MILAN": {rank: 42, change: 2},
+            "DUBLIN": {rank: 43, change: -1},
+            "LOS ANGELES, CA": {rank: 44, change: 26},
+            "NEW YORK CITY, NY": {rank: 45, change: -5},
+            "STUTTGART": {rank: 46, change: -20},
+            "MADRID": {rank: 47, change: -1},
+            "PORTLAND, OR": {rank: 48, change: 5},
+            "WASHINGTON, DC": {rank: 49, change: 8},
+            "EDINBURGH": {rank: 50, change: 1},
+            "SEATTLE, WA": {rank: 52, change: 0},
+            "GLASGOW": {rank: 53, change: 1},
+            "ATLANTA, GA": {rank: 53, change: 16},
+            "BARCELONA": {rank: 55, change: -7},
+            "TOKYO": {rank: 56, change: -6},
+            "BIRMINGHAM": {rank: 57, change: 3},
+            "YOKOHAMA": {rank: 58, change: -11},
+            "ROME": {rank: 59, change: 2},
+            "DALLAS, TX": {rank: 59, change: 14},
+            "PITTSBURGH, PA": {rank: 61, change: -5},
+            "ABERDEEN": {rank: 62, change: -13},
+            "PRAGUE": {rank: 63, change: 8},
+            "LEIPZIG": {rank: 64, change: -5},
+            "HOUSTON, TX": {rank: 65, change: -3},
+            "CHICAGO, IL": {rank: 66, change: -1},
+            "BELFAST": {rank: 66, change: 1},
+            "OSAKA": {rank: 68, change: -10},
+            "PHILADELPHIA, PA": {rank: 69, change: -4},
+            "MIAMI, FL": {rank: 70, change: -3},
+            "MINNEAPOLIS, MN": {rank: 71, change: -7},
+            "CLEVELAND, OH": {rank: 71, change: 1},
+            "ST. LOUIS, MO": {rank: 73, change: 1},
+            "NAGOYA": {rank: 74, change: -11},
+            "DETROIT, MI": {rank: 75, change: 1},
+            "HONG KONG": {rank: 76, change: 1},
+            "LJUBLJANA": {rank: 77, change: 1},
+            "WARSAW": {rank: 78, change: 6},
+            "BUDAPEST": {rank: 79, change: 1},
+            "POINTE-A-PITRE": {rank: 80, change: -5},
+            "SEOUL": {rank: 81, change: 0},
+            "BRATISLAVA": {rank: 81, change: 2},
+            "DUBAI": {rank: 83, change: -4},
+            "VILNIUS": {rank: 84, change: 3},
+            "TAIPEI": {rank: 85, change: -3},
+            "ABU DHABI": {rank: 85, change: -1},
+            "TALLINN": {rank: 87, change: 4},
+            "PORT LOUIS": {rank: 88, change: 0},
+            "RIGA": {rank: 89, change: 4},
+            "ATHENS": {rank: 89, change: 5},
+            "KUALA LUMPUR": {rank: 91, change: -5},
+            "MONTEVIDEO": {rank: 92, change: -3},
+            "LIMASSOL": {rank: 93, change: -3},
+            "KRAKOW": {rank: 94, change: 5},
+            "SAN JUAN": {rank: 95, change: -3},
+            "ZAGREB": {rank: 96, change: 1},
+            "BUENOS AIRES": {rank: 97, change: 3},
+            "SANTIAGO": {rank: 98, change: 6},
+            "WROCLAW": {rank: 99, change: 7},
+            "BUSAN": {rank: 100, change: 0},
+            "VICTORIA": {rank: 101, change: -3},
+            "TAICHUNG": {rank: 102, change: -7},
+            "SAO PAULO": {rank: 103, change: 5},
+            "PANAMA CITY": {rank: 104, change: -1},
+            "CAPE TOWN": {rank: 105, change: -3},
+            "SHANGHAI": {rank: 106, change: 3},
+            "KAOHSIUNG": {rank: 107, change: -6},
+            "BUCHAREST": {rank: 108, change: 3},
+            "DOHA": {rank: 109, change: 8},
+            "DURBAN": {rank: 110, change: 0},
+            "JOHOR BAHRU": {rank: 111, change: -4},
+            "BANDAR SERI BEGAWAN": {rank: 112, change: 0},
+            "SAN JOSE": {rank: 112, change: 3},
+            "RIO DE JANEIRO": {rank: 114, change: 1},
+            "JOHANNESBURG": {rank: 115, change: -10},
+            "MEXICO CITY": {rank: 116, change: 14},
+            "BRASILIA": {rank: 117, change: 2},
+            "MONTERREY": {rank: 118, change: 4},
+            "MUSCAT": {rank: 119, change: -1},
+            "BELO HORIZONTE": {rank: 120, change: 0},
+            "SOFIA": {rank: 121, change: 4},
+            "ASUNCION": {rank: 122, change: 0},
+            "BEIJING": {rank: 123, change: 3},
+            "BANGKOK": {rank: 124, change: 0},
+            "BOGOTA": {rank: 124, change: 5},
+            "TEL AVIV": {rank: 126, change: 1},
+            "RABAT": {rank: 127, change: 0},
+            "GUANGZHOU": {rank: 128, change: 4},
+            "NOUMEA": {rank: 129, change: -17},
+            "QUITO": {rank: 129, change: -8},
+            "TUNIS": {rank: 129, change: 2},
+            "NASSAU": {rank: 132, change: -18},
+            "LIMA": {rank: 133, change: 0},
+            "ISTANBUL": {rank: 134, change: 3},
+            "CASABLANCA": {rank: 135, change: 1},
+            "MANILA": {rank: 136, change: -1},
+            "AMMAN": {rank: 137, change: -3},
+            "ANKARA": {rank: 138, change: 0},
+            "SHENZHEN": {rank: 139, change: 0},
+            "KUWAIT CITY": {rank: 139, change: 2},
+            "WINDHOEK": {rank: 141, change: -2},
+            "MANAMA": {rank: 142, change: 2},
+            "BELGRADE": {rank: 143, change: -1},
+            "CHENGDU": {rank: 144, change: 1},
+            "SANTO DOMINGO": {rank: 145, change: -2},
+            "SUZHOU": {rank: 146, change: 1},
+            "NANJING": {rank: 147, change: 2},
+            "JAKARTA": {rank: 148, change: 0},
+            "GABORONE": {rank: 149, change: -3},
+            "HYDERABAD": {rank: 150, change: 0},
+            "CHONGQING": {rank: 151, change: 1},
+            "XIAN": {rank: 151, change: 7},
+            "PORT OF SPAIN": {rank: 153, change: -2},
+            "PUNE": {rank: 154, change: 0},
+            "QINGDAO": {rank: 154, change: 1},
+            "BENGALURU": {rank: 156, change: 0},
+            "WUHAN": {rank: 157, change: 2},
+            "MUMBAI": {rank: 158, change: 6},
+            "MANAUS": {rank: 159, change: -9},
+            "SARAJEVO": {rank: 160, change: 5},
+            "CHENNAI": {rank: 161, change: 0},
+            "KINGSTON": {rank: 162, change: -5},
+            "HO CHI MINH CITY": {rank: 163, change: -1},
+            "LUSAKA": {rank: 164, change: -4},
+            "RIYADH": {rank: 164, change: 8},
+            "SKOPJE": {rank: 166, change: -3},
+            "SHENYANG": {rank: 167, change: 2},
+            "HANOI": {rank: 168, change: -1},
+            "JEDDAH": {rank: 169, change: 2},
+            "KOLKATA": {rank: 170, change: 0},
+            "LA PAZ": {rank: 171, change: -4},
+            "GUATEMALA CITY": {rank: 172, change: -6},
+            "NEW DELHI": {rank: 173, change: -1},
+            "YEREVAN": {rank: 174, change: 0},
+            "SAN SALVADOR": {rank: 175, change: 13},
+            "DAKAR": {rank: 176, change: -1},
+            "ACCRA": {rank: 177, change: -1},
+            "LIBREVILLE": {rank: 178, change: -1},
+            "ALMATY": {rank: 179, change: 2},
+            "COLOMBO": {rank: 180, change: -2},
+            "TIRANA": {rank: 181, change: -2},
+            "VIENTIANE": {rank: 183, change: -3},
+            "ALGIERS": {rank: 184, change: 5},
+            "KAMPALA": {rank: 185, change: -1},
+            "BANJUL": {rank: 187, change: -6},
+            "TBILISI": {rank: 188, change: -2},
+            "BLANTYRE": {rank: 189, change: -3},
+            "CAIRO": {rank: 190, change: -5},
+            "NAIROBI": {rank: 191, change: -2},
+            "MINSK": {rank: 192, change: 7},
+            "MAPUTO": {rank: 193, change: -2},
+            "MANAGUA": {rank: 194, change: -1},
+            "COTONOU": {rank: 195, change: -1},
+            "KIGALI": {rank: 196, change: -1},
+            "TEGUCIGALPA": {rank: 197, change: -1},
+            "DJIBOUTI": {rank: 198, change: 0},
+            "BAKU": {rank: 199, change: -2},
+            "TASHKENT": {rank: 200, change: 0}
+        };
+
+        // 合并数据
+        const cities = costOfLivingData.map(city => {
+            const qualityData = qualityOfLifeRanks[city.city];
+            return {
+                ...city,
+                qualityRank: qualityData ? qualityData.rank : null,
+                qualityChange: qualityData ? qualityData.change : null
+            };
+        });
+
+        let currentRanking = 'cost';
+        let filters = {
+            costMin: 1,
+            costMax: 226,
+            qualityMin: 1,
+            qualityMax: 200
+        };
+
         // 根据排名获取颜色
         function getColor(rank) {
             if (rank <= 50) {
@@ -622,116 +1085,303 @@
         let currentMarker = null;
         let currentBar = null;
 
+        // 筛选城市
+        function filterCities() {
+            return cities.filter(city => {
+                const costMatch = city.rank >= filters.costMin && city.rank <= filters.costMax;
+                const qualityMatch = city.qualityRank === null || 
+                                   (city.qualityRank >= filters.qualityMin && city.qualityRank <= filters.qualityMax);
+                return costMatch && qualityMatch;
+            });
+        }
+
         // 创建标记
-        cities.forEach(city => {
-            const colors = getColor(city.rank);
-            const size = getMarkerSize(city.rank);
+        function createMarkers() {
+            Object.values(markers).forEach(marker => marker.remove());
+            Object.keys(markers).forEach(key => delete markers[key]);
 
-            const marker = L.circleMarker([city.lat, city.lng], {
-                radius: size,
-                fillColor: colors.marker,
-                color: '#fff',
-                weight: 1.5,
-                opacity: 0.9,
-                fillOpacity: 0.7
-            }).addTo(map);
+            const filteredCities = filterCities();
+            const displayCities = currentRanking === 'quality' 
+                ? filteredCities.filter(city => city.qualityRank !== null)
+                : filteredCities;
 
-            const changeClass = city.change > 0 ? 'positive' : city.change < 0 ? 'negative' : 'neutral';
-            const popupContent = `
-                <div class="popup-content">
-                    <div class="popup-rank">#${city.rank}</div>
-                    <div class="popup-city">${city.city}</div>
-                    <div class="popup-country">${city.country}</div>
-                    <div class="popup-change ${changeClass}">
-                        排名变化: ${city.change > 0 ? '+' : ''}${city.change}
-                    </div>
-                </div>
-            `;
-            marker.bindPopup(popupContent);
-            markers[city.rank] = marker;
-        });
+            displayCities.forEach(city => {
+                const rank = currentRanking === 'quality' ? city.qualityRank : city.rank;
+                const colors = getColor(rank);
+                const size = getMarkerSize(rank);
+
+                const marker = L.circleMarker([city.lat, city.lng], {
+                    radius: size,
+                    fillColor: colors.marker,
+                    color: '#fff',
+                    weight: 1.5,
+                    opacity: 0.9,
+                    fillOpacity: 0.7
+                }).addTo(map);
+
+                const change = currentRanking === 'quality' ? city.qualityChange : city.change;
+                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+                
+                let popupContent = `
+                    <div class="popup-content">
+                        <div class="popup-rank">#${rank}</div>
+                        <div class="popup-city">${city.city}</div>
+                        <div class="popup-country">${city.country}</div>
+                        <div class="popup-change ${changeClass}">
+                            排名变化: ${change > 0 ? '+' : ''}${change}
+                        </div>
+                `;
+
+                if (city.qualityRank !== null) {
+                    popupContent += `
+                        <div class="popup-dual-rank">
+                            <div>
+                                <div class="popup-rank-label">生活成本</div>
+                                <div class="popup-rank-value">#${city.rank}</div>
+                            </div>
+                            <div>
+                                <div class="popup-rank-label">生活质量</div>
+                                <div class="popup-rank-value">#${city.qualityRank}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                popupContent += '</div>';
+                marker.bindPopup(popupContent);
+                markers[rank] = marker;
+            });
+        }
 
         // 创建条形图
-        const chartContainer = document.getElementById('chartContainer');
-        cities.forEach(city => {
-            const colors = getColor(city.rank);
-            const barContainer = document.createElement('div');
-            barContainer.className = 'bar-container';
+        function createChart() {
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.innerHTML = '';
 
-            const bar = document.createElement('div');
-            bar.className = 'bar';
-            bar.style.setProperty('--bar-color', colors.start);
-            bar.style.setProperty('--bar-color-end', colors.end);
-            bar.style.width = `${Math.max(30, 100 - (city.rank - 1) * 0.3)}%`;
+            const filteredCities = filterCities();
+            const displayCities = currentRanking === 'quality' 
+                ? filteredCities.filter(city => city.qualityRank !== null).sort((a, b) => a.qualityRank - b.qualityRank)
+                : filteredCities.sort((a, b) => a.rank - b.rank);
 
-            const changeClass = city.change > 0 ? 'positive' : city.change < 0 ? 'negative' : 'neutral';
-            const changeSymbol = city.change > 0 ? '↑' : city.change < 0 ? '↓' : '—';
-
-            bar.innerHTML = `
-                <span class="rank">#${city.rank}</span>
-                <span class="bar-label">
-                    ${city.city}
-                    <span class="country">${city.country}</span>
-                </span>
-                <span class="change ${changeClass}">${changeSymbol} ${Math.abs(city.change)}</span>
-            `;
-
-            bar.addEventListener('mouseenter', () => {
-                if (currentBar) {
-                    currentBar.classList.remove('active');
-                }
-                bar.classList.add('active');
-                currentBar = bar;
-
-                const marker = markers[city.rank];
-
-                if (currentMarker) {
-                    const prevCity = cities.find(c => c.rank === parseInt(currentMarker.options.rank));
-                    const prevColors = getColor(prevCity.rank);
-                    const prevSize = getMarkerSize(prevCity.rank);
-                    currentMarker.setStyle({
-                        fillColor: prevColors.marker,
-                        radius: prevSize,
-                        weight: 1.5
-                    });
-                }
-
-                marker.setStyle({
-                    fillColor: '#f5556c',
-                    radius: 16,
-                    weight: 3
-                });
-                marker.options.rank = city.rank;
-
-                currentMarker = marker;
-
-                // 平滑缩放到城市
-                map.flyTo([city.lat, city.lng], Math.max(map.getZoom(), 6), {
-                    duration: 0.8,
-                    easeLinearity: 0.25
-                });
+            displayCities.forEach(city => {
+                const rank = currentRanking === 'quality' ? city.qualityRank : city.rank;
+                const change = currentRanking === 'quality' ? city.qualityChange : city.change;
+                const colors = getColor(rank);
                 
-                setTimeout(() => {
-                    marker.openPopup();
-                }, 500);
+                const barContainer = document.createElement('div');
+                barContainer.className = 'bar-container';
+
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.setProperty('--bar-color', colors.start);
+                bar.style.setProperty('--bar-color-end', colors.end);
+                
+                const maxRank = currentRanking === 'quality' ? 200 : 226;
+                bar.style.width = `${Math.max(30, 100 - (rank - 1) * (70 / maxRank))}%`;
+
+                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+                const changeSymbol = change > 0 ? '↑' : change < 0 ? '↓' : '—';
+
+                let labelHTML = `
+                    <span class="rank">#${rank}</span>
+                    <span class="bar-label">
+                        ${city.city}
+                        <span class="country">${city.country}</span>
+                `;
+
+                if (city.qualityRank !== null && currentRanking === 'cost') {
+                    labelHTML += `<span class="dual-rank-badge">质量 #${city.qualityRank}</span>`;
+                }
+
+                labelHTML += `
+                    </span>
+                    <span class="change ${changeClass}">${changeSymbol} ${Math.abs(change)}</span>
+                `;
+
+                bar.innerHTML = labelHTML;
+
+                bar.addEventListener('mouseenter', () => {
+                    if (currentBar) {
+                        currentBar.classList.remove('active');
+                    }
+                    bar.classList.add('active');
+                    currentBar = bar;
+
+                    const marker = markers[rank];
+
+                    if (currentMarker) {
+                        const prevRank = parseInt(currentMarker.options.rankValue);
+                        const prevColors = getColor(prevRank);
+                        const prevSize = getMarkerSize(prevRank);
+                        currentMarker.setStyle({
+                            fillColor: prevColors.marker,
+                            radius: prevSize,
+                            weight: 1.5
+                        });
+                    }
+
+                    if (marker) {
+                        marker.setStyle({
+                            fillColor: '#f5556c',
+                            radius: 16,
+                            weight: 3
+                        });
+                        marker.options.rankValue = rank;
+                        currentMarker = marker;
+
+                        map.flyTo([city.lat, city.lng], Math.max(map.getZoom(), 6), {
+                            duration: 0.8,
+                            easeLinearity: 0.25
+                        });
+                        
+                        setTimeout(() => {
+                            marker.openPopup();
+                        }, 500);
+                    }
+                });
+
+                barContainer.appendChild(bar);
+                chartContainer.appendChild(barContainer);
             });
 
-            barContainer.appendChild(bar);
-            chartContainer.appendChild(barContainer);
-        });
+            // 更新统计
+            const filteredCount = displayCities.length;
+            const totalCount = currentRanking === 'quality' 
+                ? cities.filter(c => c.qualityRank !== null).length
+                : cities.length;
+            document.getElementById('filteredCount').textContent = filteredCount;
+            document.getElementById('totalCount').textContent = totalCount;
+        }
+
+        // 切换排名类型
+        function switchRanking(type) {
+            currentRanking = type;
+            
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            const legendTitle = document.getElementById('legendTitle');
+            legendTitle.textContent = type === 'cost' ? '生活成本排名等级' : '生活质量排名等级';
+
+            createMarkers();
+            createChart();
+
+            if (currentBar) {
+                currentBar.classList.remove('active');
+                currentBar = null;
+            }
+            if (currentMarker) {
+                currentMarker = null;
+            }
+        }
+
+        // 初始化范围滑块
+        function initRangeSliders() {
+            const costMinRange = document.getElementById('costMinRange');
+            const costMaxRange = document.getElementById('costMaxRange');
+            const qualityMinRange = document.getElementById('qualityMinRange');
+            const qualityMaxRange = document.getElementById('qualityMaxRange');
+            
+            function updateCostRange() {
+                let min = parseInt(costMinRange.value);
+                let max = parseInt(costMaxRange.value);
+                
+                if (min > max) {
+                    [min, max] = [max, min];
+                    costMinRange.value = min;
+                    costMaxRange.value = max;
+                }
+                
+                filters.costMin = min;
+                filters.costMax = max;
+                
+                document.getElementById('costRangeValue').textContent = `${min} - ${max}`;
+                updateTrack('cost', min, max, 226);
+                applyFilters();
+            }
+            
+            function updateQualityRange() {
+                let min = parseInt(qualityMinRange.value);
+                let max = parseInt(qualityMaxRange.value);
+                
+                if (min > max) {
+                    [min, max] = [max, min];
+                    qualityMinRange.value = min;
+                    qualityMaxRange.value = max;
+                }
+                
+                filters.qualityMin = min;
+                filters.qualityMax = max;
+                
+                document.getElementById('qualityRangeValue').textContent = `${min} - ${max}`;
+                updateTrack('quality', min, max, 200);
+                applyFilters();
+            }
+            
+            function updateTrack(type, min, max, total) {
+                const track = document.getElementById(type + 'Track');
+                const percentMin = ((min - 1) / total) * 100;
+                const percentMax = ((max - 1) / total) * 100;
+                track.style.left = percentMin + '%';
+                track.style.width = (percentMax - percentMin) + '%';
+            }
+            
+            costMinRange.addEventListener('input', updateCostRange);
+            costMaxRange.addEventListener('input', updateCostRange);
+            qualityMinRange.addEventListener('input', updateQualityRange);
+            qualityMaxRange.addEventListener('input', updateQualityRange);
+            
+            // 初始化轨道
+            updateTrack('cost', 1, 226, 226);
+            updateTrack('quality', 1, 200, 200);
+        }
+
+        // 应用筛选
+        function applyFilters() {
+            createMarkers();
+            createChart();
+        }
+
+        // 重置筛选
+        function resetFilters() {
+            filters = {
+                costMin: 1,
+                costMax: 226,
+                qualityMin: 1,
+                qualityMax: 200
+            };
+            
+            document.getElementById('costMinRange').value = 1;
+            document.getElementById('costMaxRange').value = 226;
+            document.getElementById('qualityMinRange').value = 1;
+            document.getElementById('qualityMaxRange').value = 200;
+            
+            document.getElementById('costRangeValue').textContent = '1 - 226';
+            document.getElementById('qualityRangeValue').textContent = '1 - 200';
+            
+            const costTrack = document.getElementById('costTrack');
+            const qualityTrack = document.getElementById('qualityTrack');
+            costTrack.style.left = '0%';
+            costTrack.style.width = '100%';
+            qualityTrack.style.left = '0%';
+            qualityTrack.style.width = '100%';
+            
+            applyFilters();
+        }
 
         // 搜索功能
         const searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            const bars = chartContainer.querySelectorAll('.bar-container');
+            const bars = document.querySelectorAll('.bar-container');
 
-            bars.forEach((barContainer, index) => {
-                const city = cities[index];
-                const cityName = city.city.toLowerCase();
-                const countryName = city.country.toLowerCase();
+            bars.forEach((barContainer) => {
+                const bar = barContainer.querySelector('.bar');
+                const text = bar.textContent.toLowerCase();
 
-                if (cityName.includes(searchTerm) || countryName.includes(searchTerm)) {
+                if (text.includes(searchTerm)) {
                     barContainer.style.display = 'block';
                 } else {
                     barContainer.style.display = 'none';
@@ -745,9 +1395,9 @@
                 currentBar.classList.remove('active');
             }
             if (currentMarker) {
-                const city = cities.find(c => c.rank === parseInt(currentMarker.options.rank));
-                const colors = getColor(city.rank);
-                const size = getMarkerSize(city.rank);
+                const rank = parseInt(currentMarker.options.rankValue);
+                const colors = getColor(rank);
+                const size = getMarkerSize(rank);
                 currentMarker.setStyle({
                     fillColor: colors.marker,
                     radius: size,
@@ -755,6 +1405,15 @@
                 });
             }
         });
+
+        // 初始化
+        initRangeSliders();
+        createMarkers();
+        createChart();
+
+        // 全局函数
+        window.switchRanking = switchRanking;
+        window.resetFilters = resetFilters;
     </script>
 </body>
 </html>
